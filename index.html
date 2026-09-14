@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Industry Space Model</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;450;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#f6f6f3; --panel:#fffffe; --sunk:#eeeee9;
+  --ink:#191a1c; --ink-2:#42454a; --muted:#71757c; --line:#e2e2dd; --line-2:#cecec7;
+  --accent:#2f5d50; --accent-ink:#2a544a; --accent-wash:#e6efeb;
+  --l1:#191a1c; --l2:#3a5a8c; --l3:#6d4f8c; --l4:#8a5a1f; --stage:#7a3b3b;
+  --flag:#8a5a1f; --flag-wash:#f7efe3;
+  --serif:"Spectral",Georgia,"Times New Roman",serif;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r:7px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#141517; --panel:#1b1d20; --sunk:#101113;
+  --ink:#e9e9e5; --ink-2:#b8babd; --muted:#878b90; --line:#2b2e32; --line-2:#3a3e43;
+  --accent:#6fae98; --accent-ink:#7dbca6; --accent-wash:#1c2724;
+  --l1:#e9e9e5; --l2:#87a4cf; --l3:#ad92cc; --l4:#c99a58; --stage:#c48b8b;
+  --flag:#c99a58; --flag-wash:#2a2418;
+}}
+:root[data-theme="dark"]{
+  --ground:#141517; --panel:#1b1d20; --sunk:#101113;
+  --ink:#e9e9e5; --ink-2:#b8babd; --muted:#878b90; --line:#2b2e32; --line-2:#3a3e43;
+  --accent:#6fae98; --accent-ink:#7dbca6; --accent-wash:#1c2724;
+  --l1:#e9e9e5; --l2:#87a4cf; --l3:#ad92cc; --l4:#c99a58; --stage:#c48b8b;
+  --flag:#c99a58; --flag-wash:#2a2418;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.top{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:13px 22px;
+  background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+@media (max-width:560px){.top{padding:12px 16px;gap:11px}}
+.wordmark{font:600 17px/1.1 var(--serif);letter-spacing:-.012em;white-space:nowrap;margin:0}
+.wordmark em{font-style:italic;font-weight:400;color:var(--accent-ink)}
+.tally{display:flex;gap:13px;font:500 11px/1.5 var(--mono);color:var(--muted);
+  font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.tally b{color:var(--ink-2);font-weight:500}
+.find{flex:1;min-width:190px;position:relative}
+.find input{width:100%;padding:8px 12px 8px 31px;border:1px solid var(--line-2);border-radius:var(--r);
+  background:var(--ground);color:var(--ink);font:14px var(--sans)}
+.find input:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.find svg{position:absolute;left:10px;top:11px;color:var(--muted)}
+.tbtn{border:1px solid var(--line-2);background:transparent;color:var(--muted);cursor:pointer;
+  border-radius:var(--r);padding:7px 11px;font:500 11px var(--mono)}
+.tbtn:hover{color:var(--ink);border-color:var(--accent)}
+.tbtn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+.frame{display:grid;grid-template-columns:minmax(285px,355px) 1fr;height:calc(100vh - 55px)}
+@media (max-width:860px){.frame{grid-template-columns:1fr;height:auto}
+  .nav{max-height:42vh;border-right:0;border-bottom:1px solid var(--line)}}
+.nav{overflow-y:auto;background:var(--panel);border-right:1px solid var(--line);padding:10px 10px 70px}
+.doc{overflow-y:auto;padding:26px 30px 90px}
+@media (max-width:560px){.doc{padding:20px 16px 70px}}
+
+.n{display:flex;gap:7px;align-items:baseline;width:100%;text-align:left;border:0;background:transparent;
+  color:inherit;cursor:pointer;padding:5px 8px;border-radius:5px;font:14px/1.42 var(--sans)}
+.n:hover{background:var(--sunk)}
+.n:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.n[aria-current="true"]{background:var(--accent-wash);box-shadow:inset 2px 0 0 var(--accent)}
+.n code{font:500 10.5px var(--mono);flex-shrink:0;letter-spacing:-.02em}
+.c1{color:var(--l1)}.c2{color:var(--l2)}.c3{color:var(--l3)}.c4{color:var(--l4)}
+.tw{display:inline-block;width:9px;color:var(--muted);font-size:9px;flex-shrink:0}
+.branch{margin-left:15px;border-left:1px solid var(--line);padding-left:4px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;align-self:center}
+
+.eyebrow{font:500 10.5px/1.4 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.title{font:600 27px/1.2 var(--serif);letter-spacing:-.016em;margin:0 0 7px;text-wrap:balance;max-width:26ch}
+.stand{font:400 16px/1.55 var(--serif);font-style:italic;color:var(--ink-2);max-width:60ch;margin:0 0 18px}
+.flags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px}
+.block{margin:26px 0}
+.block>h2{font:500 10.5px/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  margin:0 0 9px;display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+.block>h2 span{color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.prose{max-width:68ch;color:var(--ink-2)}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:15px 17px}
+.sheet+.sheet{margin-top:7px}
+.chip{display:inline-flex;align-items:center;font:500 10.5px/1 var(--mono);padding:4px 8px;border-radius:20px;
+  border:1px solid var(--line-2);color:var(--muted);white-space:nowrap}
+.chip.key{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-wash)}
+.chip.flag{border-color:var(--flag);color:var(--flag);background:var(--flag-wash)}
+.list{display:grid;gap:7px}
+.item{display:grid;grid-template-columns:auto 1fr;gap:4px 11px;border:0;text-align:left;color:inherit;
+  font:inherit;cursor:pointer;width:100%;background:var(--panel);border-radius:var(--r);padding:12px 15px;
+  box-shadow:inset 0 0 0 1px var(--line)}
+.item:hover{box-shadow:inset 0 0 0 1px var(--accent)}
+.item:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.item code{font:500 10.5px var(--mono);color:var(--muted);align-self:center}
+.item b{font-weight:450}
+.item .sub{grid-column:1/-1;font-size:13.5px;color:var(--muted);line-height:1.5}
+.dims{display:grid;gap:9px}
+.dim{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+.dim>code{font:500 11px var(--mono);color:var(--accent-ink);min-width:22px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td code{font:500 11px var(--mono);color:var(--muted);white-space:nowrap}
+.scroll{overflow-x:auto}
+.rule{border:0;border-top:1px solid var(--line);margin:14px 0}
+.stage{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);overflow:hidden}
+.stage summary{cursor:pointer;padding:12px 15px;display:flex;gap:12px;align-items:baseline;list-style:none;flex-wrap:wrap}
+.stage summary::-webkit-details-marker{display:none}
+.stage summary:hover{background:var(--sunk)}
+.stage summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.stage[open] summary{border-bottom:1px solid var(--line)}
+.sn{font:500 11px var(--mono);color:var(--stage);flex-shrink:0}
+.sname{font-weight:450}
+.sbody{padding:14px 16px 16px;display:grid;gap:11px}
+.link{font:500 11.5px var(--mono);color:var(--muted);margin:5px 0 5px 26px}
+.link b{color:var(--accent-ink);font-weight:500}
+.fact{font-size:14px;color:var(--ink-2)}
+.fact b{color:var(--ink);font-weight:500}
+dl.sub{display:grid;grid-template-columns:158px 1fr;gap:7px 16px;margin:4px 0 0;font-size:13.5px}
+@media (max-width:620px){dl.sub{grid-template-columns:1fr;gap:2px}dl.sub dt{margin-top:9px}}
+dl.sub dt{font:500 10px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+dl.sub dd{margin:0;color:var(--ink-2)}
+cite{font-style:normal;font:500 10px var(--mono);color:var(--accent-ink);
+  border-bottom:1px dotted var(--accent);cursor:help;padding:0 1px}
+.loop{display:grid;grid-template-columns:74px 92px 1fr;gap:11px;padding:9px 0;
+  border-bottom:1px solid var(--line);font-size:13.5px;align-items:baseline}
+.loop:last-child{border-bottom:0}
+@media (max-width:620px){.loop{grid-template-columns:1fr;gap:3px}}
+.loop code{font:500 10.5px var(--mono);color:var(--stage)}
+.hit{display:block;width:100%;text-align:left;border:0;background:transparent;color:inherit;cursor:pointer;
+  padding:8px 9px;border-radius:5px;font:inherit}
+.hit:hover{background:var(--sunk)}
+.hit:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.hit small{display:block;color:var(--muted);font:500 10px var(--mono);margin-top:2px}
+.void{color:var(--muted);text-align:center;padding:46px 10px;font-size:14px}
+.note{border-left:2px solid var(--line-2);padding-left:13px;color:var(--muted);font-size:13.5px;margin:10px 0 0}
+.chip.go{border:1px solid var(--line-2);background:transparent;cursor:pointer;font-family:var(--mono)}
+.chip.go:hover{border-color:var(--accent);color:var(--accent-ink)}
+.chip.go:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1 class="wordmark">Industry Space <em>Model</em></h1>
+  <div class="tally" id="tally"></div>
+  <div class="find">
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+      <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14"/></svg>
+    <input id="q" type="search" placeholder="States, contexts, mechanisms, firms, business spaces…" autocomplete="off" aria-label="Search the model">
+  </div>
+  <button class="tbtn" id="theme" type="button">theme</button>
+</div>
+
+<div class="frame">
+  <nav class="nav" id="nav" aria-label="Model navigator"></nav>
+  <main class="doc" id="doc"></main>
+</div>
+
+<script src="data/model.js"></script>
+<script>
+const M = window.ISM;
+const NAV = document.getElementById('nav'), DOC = document.getElementById('doc');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const open = new Set(['N1']);
+let sel = null;
+
+const cite = t => esc(t).replace(/\[(S\d{3,4})\]/g, (_, id) => {
+  const s = M.sources[id];
+  return s ? `<cite title="${esc(s.title)} — ${esc(s.publisher)}${s.published ? ', ' + esc(s.published) : ''}">[${id}]</cite>` : `[${id}]`;
+});
+const L2 = () => M.needs.flatMap(n => n.children);
+const L3 = () => L2().flatMap(f => f.children);
+
+function drawNav() {
+  let h = '';
+  for (const need of M.needs) {
+    h += row(need.id, 1, need.name, need.children.length);
+    if (open.has(need.id)) {
+      h += '<div class="branch">';
+      for (const f of need.children) {
+        h += row(f.id, 2, f.name, f.children.length);
+        if (open.has(f.id)) {
+          h += '<div class="branch">';
+          for (const c of f.children) {
+            h += row(c.id, 3, c.name, (c.mechanism_ids || []).length);
+            if (open.has(c.id)) {
+              h += '<div class="branch">';
+              for (const mid of c.mechanism_ids || []) {
+                const m = M.mechanisms[mid];
+                if (m) h += row(mid, 4, m.name, 0, !!M.chains[m.chain_id]);
+              }
+              h += '</div>';
+            }
+          }
+          h += '</div>';
+        }
+      }
+      h += '</div>';
+    }
+  }
+  NAV.innerHTML = h;
+}
+function row(id, lv, name, kids, chained) {
+  const tw = kids ? (open.has(id) ? '▾' : '▸') : '&nbsp;';
+  return `<button class="n" type="button" data-id="${id}" data-kids="${kids}" aria-current="${sel === id}">
+    <span class="tw">${tw}</span><code class="c${lv}">${id}</code><span>${esc(name)}</span>
+    ${chained ? '<span class="dot" title="chain expanded"></span>' : ''}</button>`;
+}
+NAV.addEventListener('click', e => {
+  const b = e.target.closest('.n');
+  if (b) { const id = b.dataset.id;
+    if (+b.dataset.kids) open.has(id) ? open.delete(id) : open.add(id);
+    return go(id); }
+  const h = e.target.closest('.hit');
+  if (h) { document.getElementById('q').value = ''; go(h.dataset.go); }
+});
+function go(id) {
+  sel = id;
+  if (!id.startsWith('TPL:')) {
+    const p = id.split('.');
+    for (let i = 1; i <= p.length; i++) open.add(p.slice(0, i).join('.'));
+  }
+  drawNav();
+  const cur = NAV.querySelector('[aria-current="true"]');
+  if (cur) cur.scrollIntoView({ block: 'nearest' });
+  DOC.innerHTML = render(id);
+  DOC.scrollTop = 0;
+}
+const render = id => {
+  if (id.startsWith('TPL:')) return tplDoc(M.templates[id.slice(4)]);
+  const n = id.split('.').length;
+  if (n === 1) return needDoc(M.needs.find(x => x.id === id));
+  if (n === 2) return stateDoc(L2().find(x => x.id === id));
+  if (n === 3) return ctxDoc(L3().find(x => x.id === id));
+  return mechDoc(M.mechanisms[id]);
+};
+const needDoc = nd => `
+  <div class="eyebrow">L1 · need</div>
+  <h2 class="title">${esc(nd.name)}</h2>
+  <p class="stand">${esc(nd.gloss)}</p>
+  <div class="block"><h2>Functional requirements <span>${nd.children.length}</span></h2>
+    <div class="list">${nd.children.map(f => `<button class="item" type="button" data-go="${f.id}">
+      <code>${f.id}</code><b>${esc(f.name)}</b>
+      <span class="sub">${esc(f.state_description)}</span></button>`).join('')}</div></div>`;
+
+function stateDoc(f) {
+  const dims = f.dimension_values_used || {}, pruned = f.pruned_combinations || [];
+  const cells = Object.keys(dims).length ? Object.values(dims).reduce((a, v) => a * v.length, 1) : 0;
+  return `
+  <div class="eyebrow">L2 · functional requirement — what state must hold?</div>
+  <h2 class="title">${esc(f.name)}</h2>
+  <p class="stand">${esc(f.state_description)}</p>
+  <div class="block"><h2>Partition logic — why this sibling set is complete</h2>
+    <div class="sheet prose">${esc(f.partition_logic)}</div></div>
+  ${f.branching_rationale ? `<div class="block"><h2>Branching rationale — which constraints were branched on</h2>
+    <div class="sheet prose">${esc(f.branching_rationale)}</div></div>` : ''}
+  ${cells ? `<div class="block">
+    <h2>Grid <span>${cells} cells = ${f.children.length} contexts + ${pruned.length} pruned</span></h2>
+    <div class="sheet"><div class="dims">${Object.entries(dims).map(([d, vs]) =>
+      `<div class="dim"><code>${d}</code>${vs.map(v => `<span class="chip">${esc(v)}</span>`).join('')}</div>`).join('')}</div>
+      <div class="note">Every cell of this cross product is either a context below or a pruned cell carrying a written reason. That is what makes “what is missing here?” answerable by reading rather than by trusting the author.</div></div>
+    ${pruned.length ? `<div class="sheet"><div class="scroll"><table>
+      <thead><tr><th>pruned cell</th><th>reason</th></tr></thead><tbody>
+      ${pruned.map(p => `<tr><td><code>${Object.entries(p.coordinates).map(([k, v]) => k + '=' + esc(v)).join(' ')}</code></td>
+        <td>${esc(p.reason)}</td></tr>`).join('')}</tbody></table></div></div>` : ''}
+  </div>` : ''}
+  <div class="block"><h2>Contexts <span>${f.children.length}</span></h2>
+    <div class="list">${f.children.map(c => `<button class="item" type="button" data-go="${c.id}">
+      <code>${c.id}</code><b>${esc(c.name)}</b>
+      <span class="sub">${(c.mechanism_ids || []).length} mechanisms</span></button>`).join('')}</div></div>`;
+}
+function ctxDoc(c) {
+  const ms = (c.mechanism_ids || []).map(i => M.mechanisms[i]).filter(Boolean);
+  return `
+  <div class="eyebrow">L3 · fulfilment context — which constraints change the solution?</div>
+  <h2 class="title">${esc(c.name)}</h2>
+  <div class="flags">${Object.entries(c.coordinates || {}).map(([k, v]) =>
+    `<span class="chip key">${k} = ${esc(v)}</span>`).join('')}</div>
+  ${c.invariance_justification ? `<div class="block"><h2>Invariance justification · EC-10</h2>
+    <div class="sheet prose">${esc(c.invariance_justification)}</div></div>` : ''}
+  <div class="block"><h2>Mechanisms <span>${ms.length}</span></h2>
+    <div class="list">${ms.map(m => `<button class="item" type="button" data-go="${m.id}">
+      <code>${m.id}</code><b>${esc(m.name)}
+        ${m.final_handover && m.final_handover !== 'sold' ? ` <span class="chip flag">${esc(m.final_handover)}</span>` : ''}
+        ${m.terminal_mode === 'citizen' ? ' <span class="chip">citizen</span>' : ''}
+        ${M.chains[m.chain_id] ? ' <span class="chip key">chain</span>' : ''}</b>
+      <span class="sub">${esc(m.distinctness_basis)}</span></button>`).join('')}</div></div>`;
+}
+function mechDoc(m) {
+  if (!m) return '<div class="void">Not found.</div>';
+  const ch = M.chains[m.chain_id], mi = m.market_instances || {};
+  return `
+  <div class="eyebrow">L4 · fulfilment mechanism — by what distinct means?</div>
+  <h2 class="title">${esc(m.name)}</h2>
+  <div class="flags">
+    ${m.market_mediated ? '<span class="chip">paid stages in chain</span>' : '<span class="chip flag">no paid stage anywhere · EC-05</span>'}
+    <span class="chip${m.final_handover === 'sold' ? '' : ' flag'}">final handover: ${esc(({ sold: 'sold to the individual', 'unpaid-household': 'unpaid household labour', 'tax-funded': 'tax-funded, free to the person', donated: 'donated, free to the person', bundled: 'bundled into another paid service' })[m.final_handover] || m.final_handover)}</span>
+    <span class="chip">terminates at ${esc(m.terminal_mode)}</span>
+    ${m.template_ref ? `<span class="chip key">${esc(m.template_ref)}</span>` : '<span class="chip">no template yet</span>'}
+    ${m.canonical_id ? `<button class="chip go" type="button" data-go="${esc(m.canonical_id)}" title="EC-13: the same mechanism under another context; content and chain are shared">alias of ${esc(m.canonical_id)}</button>` : ''}
+  </div>
+  <div class="block"><h2>Distinctness basis — why this is not its sibling</h2>
+    <div class="sheet prose">${esc(m.distinctness_basis)}</div></div>
+  ${market(mi)}
+  ${ch ? chainDoc(ch) : `<div class="block"><h2>Supply chain</h2><div class="sheet">
+    <span class="chip flag">not yet expanded</span>
+    <div class="note">${M.coverage.assigned.length} of ${M.coverage.total} mechanisms carry an expanded chain. The rest await primary templates — a feeder template cannot substitute, because it terminates into another business space rather than into a person.</div></div></div>`}`;
+}
+function market(mi) {
+  if (mi.unorganised) return `<div class="block"><h2>L5 · market instances</h2><div class="sheet">
+    <span class="chip flag">unorganised market · EC-24</span>
+    <div class="note">${esc(mi.unorganised_reason)}</div>
+    <div class="note">A real competitive market with no firm worth naming — a different fact from having no market at all.</div></div></div>`;
+  if (!mi.india && !mi.global) return '';
+  const tbl = (a, label) => !a || !a.length ? '' : `<div class="scroll"><table>
+    <thead><tr><th>${label}</th><th>role</th><th>verified</th></tr></thead><tbody>
+    ${a.map(f => `<tr><td><b style="font-weight:500">${esc(f.name)}</b></td><td>${esc(f.role)}</td>
+      <td><code>${esc(f.verified_on)}${f.source ? ' · ' + esc(f.source) : ''}</code></td></tr>`).join('')}
+    </tbody></table></div>`;
+  return `<div class="block"><h2>L5 · market instances</h2>
+    ${mi.no_indian_market ? `<div class="sheet"><span class="chip flag">no Indian market · EC-17</span>
+      <div class="note">${esc(mi.no_indian_market_reason || '')}</div></div>` : ''}
+    <div class="sheet">${tbl(mi.india, 'India')}
+      ${mi.india?.length && mi.global?.length ? '<hr class="rule">' : ''}
+      ${tbl(mi.global, 'Global comparables')}</div></div>`;
+}
+function chainDoc(ch) {
+  const types = new Set(ch.loop_edges.map(e => e.type));
+  const stages = ch.stages.map((s, i) => `
+    <details class="stage"${i === 0 ? ' open' : ''}>
+      <summary><span class="sn">${s.stage_id.slice(-3)}</span>
+        <span class="sname">${esc(s.business_space)}</span>
+        ${s.primary_class ? `<span class="chip key">${esc(s.primary_class)}</span>` : ''}</summary>
+      <div class="sbody">
+        <div class="fact">${cite(s.what_it_is)}</div>
+        <div class="fact"><b>Transformation.</b> ${cite(s.transformation)}</div>
+        <div class="fact"><b>In.</b> ${Object.entries(s.inputs).filter(([, v]) => v.length)
+          .map(([k, v]) => `${k}: ${esc(v.join(', '))}`).join(' · ') || '—'}</div>
+        <div class="fact"><b>Out.</b> ${esc((s.outputs || []).join(', '))}</div>
+        <dl class="sub">${Object.entries(s.substrate).map(([k, v]) =>
+          `<dt>${k.replace(/_/g, ' ')}</dt><dd>${cite(v)}</dd>`).join('')}</dl>
+        <div class="fact"><b>Geography.</b> ${esc((s.geography || []).join(', '))}</div>
+        ${(s.example_firms?.india || []).length || (s.example_firms?.global || []).length ?
+          `<div class="fact"><b>Firms.</b> ${esc([...(s.example_firms.india || []), ...(s.example_firms.global || [])].join(' · '))}</div>` : ''}
+        ${(s.feeder_chains || []).length ? `<div class="fact"><b>Feeders.</b> ${
+          s.feeder_chains.map(f => `<button class="chip go" type="button" data-go="TPL:${esc(f.replace(/^CH-/, ''))}">${esc(f)}</button>`).join(' ')}</div>` : ''}
+      </div>
+    </details>
+    <div class="link">↓ its user is ${i < ch.stages.length - 1 ? esc(s.its_user) :
+      `<b>${esc(s.its_user)}</b> — need satisfied`}</div>`).join('');
+  return `<div class="block">
+    <h2>Supply chain <span>${ch.stages.length} stages · ${esc(ch.output_class)}</span></h2>
+    <div class="flags"><span class="chip key">${esc(ch.template_ref)}</span>
+      ${['material', 'capital', 'knowledge', 'energy'].filter(t => types.has(t))
+        .map(t => `<span class="chip">${t} loop</span>`).join('')}</div>
+    <div class="list" style="gap:0">${stages}</div></div>
+  <div class="block"><h2>Loop edges <span>${ch.loop_edges.length}</span></h2>
+    <div class="sheet">${ch.loop_edges.map(e => `<div class="loop">
+      <code>${e.from} → ${e.to}</code><span class="chip key">${esc(e.type)}</span>
+      <span>${esc(e.mechanism)}</span></div>`).join('')}</div></div>`;
+}
+
+function tplDoc(t) {
+  if (!t) return '<div class="void">Template not found.</div>';
+  const users = Object.values(M.mechanisms).filter(m => m.template_ref === t.template_id);
+  const types = new Set((t.loop_edges || []).map(e => e.type));
+  const stages = (t.stages || []).map((s, i) => `
+    <details class="stage"${i === 0 ? ' open' : ''}>
+      <summary><span class="sn">S${String(s.index).padStart(2, '0')}</span>
+        <span class="sname">${esc(s.business_space)}</span>
+        ${s.primary_class ? `<span class="chip key">${esc(s.primary_class)}</span>` : ''}
+        ${s.output_kind === 'permission' ? '<span class="chip flag">permission · EC-25</span>' : ''}</summary>
+      <div class="sbody">
+        <div class="fact">${cite(s.what_it_is)}</div>
+        <div class="fact"><b>Transformation.</b> ${cite(s.transformation)}</div>
+        <dl class="sub">${Object.entries(s.substrate).map(([k, v]) =>
+          `<dt>${k.replace(/_/g, ' ')}</dt><dd>${cite(v)}</dd>`).join('')}</dl>
+        <div class="fact"><b>Geography.</b> ${esc((s.geography || []).join(', '))}</div>
+        ${(s.feeder_chains || []).length ? `<div class="fact"><b>Feeders.</b> ${
+          s.feeder_chains.map(f => `<button class="chip go" type="button" data-go="TPL:${esc(f.replace(/^CH-/, ''))}">${esc(f)}</button>`).join(' ')}</div>` : ''}
+      </div>
+    </details>
+    <div class="link">↓ its user is ${esc(s.its_user)}</div>`).join('');
+  return `
+  <div class="eyebrow">chain template · feeder library</div>
+  <h2 class="title">${esc(t.template_id)}</h2>
+  <p class="stand">${esc(t.notes)}</p>
+  <div class="flags">
+    <span class="chip key">${esc(t.depth_tier)} tier</span>
+    <span class="chip">${esc(t.output_class)}</span>
+    <span class="chip">${(t.stages || []).length} stages</span>
+    ${['material','capital','knowledge','energy'].filter(x => types.has(x)).map(x => `<span class="chip">${x} loop</span>`).join('')}
+    ${(t.ruling_refs || []).map(r => `<span class="chip">${esc(r)}</span>`).join('')}
+  </div>
+  ${users.length ? `<div class="block"><h2>Mechanisms built on this template <span>${users.length}</span></h2>
+    <div class="list">${users.map(m => `<button class="item" type="button" data-go="${m.id}">
+      <code>${m.id}</code><b>${esc(m.name)}</b></button>`).join('')}</div></div>` : ''}
+  <div class="block"><h2>Stages <span>${(t.stages || []).length}</span></h2>
+    <div class="list" style="gap:0">${stages}</div></div>
+  <div class="block"><h2>Loop edges <span>${(t.loop_edges || []).length}</span></h2>
+    <div class="sheet">${(t.loop_edges || []).map(e => `<div class="loop">
+      <code>${e.from} → ${e.to}</code><span class="chip key">${esc(e.type)}</span>
+      <span>${esc(e.mechanism)}</span></div>`).join('')}</div></div>`;
+}
+
+DOC.addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
+const q = document.getElementById('q');
+q.addEventListener('input', () => {
+  const v = q.value.trim().toLowerCase();
+  if (v.length < 2) return drawNav();
+  const hits = M.index.filter(x => x.name.toLowerCase().includes(v) || (x.text || '').toLowerCase().includes(v)).slice(0, 140);
+  NAV.innerHTML = hits.length ? hits.map(h => `<button class="hit" type="button" data-go="${h.id}">
+    ${esc(h.name)}<small>${h.level === 6 ? 'business space' : 'L' + h.level} · ${h.id}</small></button>`).join('')
+    : '<div class="void">No matches.</div>';
+});
+document.getElementById('theme').addEventListener('click', () => {
+  const r = document.documentElement, c = r.getAttribute('data-theme');
+  const n = c === 'dark' ? 'light' : c === 'light' ? '' : 'dark';
+  n ? r.setAttribute('data-theme', n) : r.removeAttribute('data-theme');
+});
+document.getElementById('tally').innerHTML =
+  [['states', M.counts.L2], ['contexts', M.counts.L3], ['mechanisms', M.counts.L4],
+   ['chains', M.counts.chains], ['templates', M.counts.templates]]
+  .map(([k, v]) => `<span><b>${v}</b> ${k}</span>`).join('');
+drawNav();
+go('N1.F1');
+</script>
+
+</body>
+</html>
