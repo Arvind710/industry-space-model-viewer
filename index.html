@@ -228,6 +228,7 @@ function go(id) {
   if (cur) cur.scrollIntoView({ block: 'nearest' });
   DOC.innerHTML = render(id);
   DOC.scrollTop = 0;
+  if (decodeURIComponent(location.hash.slice(1)) !== id) location.hash = id;
 }
 const render = id => {
   if (id.startsWith('TPL:')) return tplDoc(M.templates[id.slice(4)]);
@@ -426,7 +427,17 @@ document.getElementById('tally').innerHTML =
    ['chains', M.counts.chains], ['templates', M.counts.templates]]
   .map(([k, v]) => `<span><b>${v}</b> ${k}</span>`).join('');
 drawNav();
-go('N1.F1');
+
+// Deep links. This page had none: go() never touched the address bar and the entry point was a
+// hardcoded go('N1.F1'), so every visitor to the published model landed on the same node and
+// nobody could link to any of the other 715 mechanisms or 635 chains. The hash now follows the
+// selection, the selection follows the hash on load, and Back and Forward work — the guard being
+// `id !== sel`, so go()'s own write to the hash does not route a second time.
+window.addEventListener('hashchange', () => {
+  const id = decodeURIComponent(location.hash.slice(1));
+  if (id && id !== sel) go(id);
+});
+go(location.hash ? decodeURIComponent(location.hash.slice(1)) : 'N1.F1');
 </script>
 
 </body>
